@@ -3,7 +3,7 @@ import pandas as pd
 from tkinter import ttk
 
 
-# ---------------- FUNCTION ---------------- #
+# ---------------- OPEN DATASET WINDOW ---------------- #
 
 def open_dataset_window():
 
@@ -13,7 +13,7 @@ def open_dataset_window():
 
     window.title("Dataset Viewer")
 
-    window.geometry("1450x750")
+    window.geometry("1400x750")
 
     window.configure(fg_color="#1a1a1a")
 
@@ -28,44 +28,11 @@ def open_dataset_window():
     title = ctk.CTkLabel(
         window,
         text="📂 Indian Road Accident Dataset",
-        font=("Arial", 30, "bold"),
+        font=("Arial", 28, "bold"),
         text_color="white"
     )
 
-    title.pack(pady=(20, 10))
-
-
-    # ---------------- STATS FRAME ---------------- #
-
-    stats_frame = ctk.CTkFrame(
-        window,
-        fg_color="#262626",
-        corner_radius=20,
-        height=80
-    )
-
-    stats_frame.pack(fill="x", padx=20, pady=10)
-
-
-    total_records = len(df)
-    total_states = df["state"].nunique()
-    avg_risk = round(df["risk_score"].mean(), 2)
-
-
-    stats_text = (
-        f"📊 Total Records: {total_records}      "
-        f"📍 States: {total_states}      "
-        f"⚠ Avg Risk Score: {avg_risk}"
-    )
-
-
-    stats_label = ctk.CTkLabel(
-        stats_frame,
-        text=stats_text,
-        font=("Arial", 18, "bold")
-    )
-
-    stats_label.pack(pady=20)
+    title.pack(pady=20)
 
 
     # ---------------- SEARCH FRAME ---------------- #
@@ -75,8 +42,10 @@ def open_dataset_window():
         fg_color="transparent"
     )
 
-    search_frame.pack(fill="x", padx=20, pady=10)
+    search_frame.pack(pady=10)
 
+
+    # ---------------- SEARCH ENTRY ---------------- #
 
     search_entry = ctk.CTkEntry(
         search_frame,
@@ -110,11 +79,10 @@ def open_dataset_window():
         "Treeview",
         background="#2b2b2b",
         foreground="white",
-        rowheight=30,
+        rowheight=28,
         fieldbackground="#2b2b2b",
-        bordercolor="#343638",
         borderwidth=0,
-        font=("Arial", 11)
+        font=("Arial", 10)
     )
 
 
@@ -129,7 +97,7 @@ def open_dataset_window():
         background="#1f538d",
         foreground="white",
         relief="flat",
-        font=("Arial", 12, "bold")
+        font=("Arial", 11, "bold")
     )
 
 
@@ -173,30 +141,34 @@ def open_dataset_window():
     tree["show"] = "headings"
 
 
-    # ---------------- HEADINGS ---------------- #
-
     for col in df.columns:
 
         tree.heading(col, text=col)
 
-        tree.column(col, width=140, anchor="center")
+        tree.column(col, width=130, anchor="center")
 
 
-    # ---------------- INSERT DATA ---------------- #
+    # ---------------- DISPLAY FUNCTION ---------------- #
 
-    for index, row in df.head(300).iterrows():
+    def display_data(dataframe):
 
-        if index % 2 == 0:
-            tag = "evenrow"
-        else:
-            tag = "oddrow"
+        # Clear Existing Data
+        tree.delete(*tree.get_children())
 
-        tree.insert(
-            "",
-            "end",
-            values=list(row),
-            tags=(tag,)
-        )
+        # Insert Data
+        for index, row in dataframe.iterrows():
+
+            if index % 2 == 0:
+                tag = "evenrow"
+            else:
+                tag = "oddrow"
+
+            tree.insert(
+                "",
+                "end",
+                values=list(row),
+                tags=(tag,)
+            )
 
 
     # ---------------- ROW COLORS ---------------- #
@@ -210,3 +182,61 @@ def open_dataset_window():
         "oddrow",
         background="#242424"
     )
+
+
+    # ---------------- SEARCH FUNCTION ---------------- #
+
+    def search_data():
+
+        city = search_entry.get().lower().strip()
+
+        if city == "":
+
+            display_data(df.head(100))
+
+        else:
+
+            filtered_df = df[
+                df["city"].astype(str)
+                .str.lower()
+                .str.contains(city)
+            ]
+
+            display_data(filtered_df.head(300))
+
+
+    # ---------------- SEARCH BUTTON ---------------- #
+
+    search_button = ctk.CTkButton(
+        search_frame,
+        text="Search",
+        width=120,
+        height=40,
+        font=("Arial", 14, "bold"),
+        fg_color="#2563eb",
+        hover_color="#1d4ed8",
+        command=search_data
+    )
+
+    search_button.pack(side="left", padx=10)
+
+
+    # ---------------- RESET BUTTON ---------------- #
+
+    reset_button = ctk.CTkButton(
+        search_frame,
+        text="Reset",
+        width=120,
+        height=40,
+        font=("Arial", 14, "bold"),
+        fg_color="#16a34a",
+        hover_color="#15803d",
+        command=lambda: display_data(df.head(100))
+    )
+
+    reset_button.pack(side="left", padx=10)
+
+
+    # ---------------- INITIAL DATA ---------------- #
+
+    display_data(df.head(100))
